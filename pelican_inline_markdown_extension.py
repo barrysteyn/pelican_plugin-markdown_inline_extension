@@ -3,9 +3,7 @@
 Pelican Inline Markdown Extension
 ==================================
 An extension for the Python Markdown module that enables
-the Pelican python blog add inline patterns. This extension
-gives Pelican the ability to use Mathjax as a "first class
-citizen" of the blog
+the Pelican python blog add inline patterns.
 """
 
 import markdown
@@ -15,7 +13,7 @@ from markdown.util import etree
 from markdown.util import AtomicString
 
 class PelicanInlineMarkdownExtensionPattern(markdown.inlinepatterns.Pattern):
-    """Inline markdown processing that matches mathjax"""
+    """Inline markdown processing"""
 
     def __init__(self, pelican_markdown_extension, tag, pattern):
         super(PelicanInlineMarkdownExtensionPattern,self).__init__(pattern)
@@ -24,16 +22,27 @@ class PelicanInlineMarkdownExtensionPattern(markdown.inlinepatterns.Pattern):
 
     def handleMatch(self, m):
         node = markdown.util.etree.Element(self.tag)
-        tag_class = self.config.get(m.group('prefix'), 'pelican-inline')
-        node.set('class', tag_class)
+        tag_attributes = self.config.get(m.group('prefix'), ('', 'pelican-inline'))
+        tag_class = 'pelican-inline'  # default class
+        tag_style = ''  # default is for no styling
+
+        if isinstance(tag_attributes, tuple):
+            tag_style = tag_attributes[0]
+            tag_class = tag_attributes[1] if len(tag_attributes) > 1 else ''
+        elif isinstance(tag_attributes, basestring):
+            tag_class = tag_attributes
+
+        if tag_class != '':
+            node.set('class', tag_class)
+        if tag_style!= '':
+            node.set('style', tag_style)
+
         node.text = markdown.util.AtomicString(m.group('text'))
 
-        # If mathjax was successfully matched, then JavaScript needs to be added
-        # for rendering. The boolean below indicates this
         return node
 
 class PelicanInlineMarkdownExtension(markdown.Extension):
-    """A markdown extension enabling mathjax processing in Markdown for Pelican"""
+    """A markdown extension enabling processing in Markdown for Pelican"""
     def __init__(self, config):
 
         try:
